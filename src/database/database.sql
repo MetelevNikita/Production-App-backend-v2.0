@@ -1,0 +1,22 @@
+create TABLE message(
+  id SERIAL PRIMARY KEY NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  text VARCHAR(255) NOT NULL,
+  date VARCHAR(255) NOT NULL
+);
+
+
+create TABLE agree(
+  id SERIAL PRIMARY KEY NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  text VARCHAR(255) NOT NULL,
+  date VARCHAR(255) NOT NULL
+);
+
+
+create TABLE disagree(
+  id SERIAL PRIMARY KEY NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  text VARCHAR(255) NOT NULL,
+  date VARCHAR(255) NOT NULL
+);
