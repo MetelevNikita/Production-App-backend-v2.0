@@ -47,7 +47,7 @@ const getSingleAgreeMessage = async (req, res) => {
 const postAgreeMessage = async (req, res) => {
   try {
 
-    const { name, text, date } = req.body
+    const {name, text, date } = req.body
     const newAreeMessage = await pool.query('INSERT INTO agree (name, text, date) VALUES ($1, $2, $3)', [name, text, date])
 
     if (!newAreeMessage.rows) {

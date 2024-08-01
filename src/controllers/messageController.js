@@ -43,18 +43,13 @@ const getSingleMessage = async (req, res) => {
 const postMessage = async (req, res) => {
   try {
 
-    const { name, text, date } = req.body
-
-    console.log(req.body)
-
+    const {name, text, date } = req.body
     const newMessage = await pool.query('INSERT INTO message (name, text, date) VALUES ($1, $2, $3) RETURNING *', [name, text, date])
 
     if (newMessage.rows.length < 1) {
       res.status(404).send([])
       return
     }
-
-    console.log(newMessage.rows)
     res.status(200).json(newMessage.rows)
 
   } catch (error) {
@@ -87,10 +82,33 @@ const deleteMessage = async (req, res) => {
 }
 
 
+const updateMessage = async (req, res) => {
+  try {
+
+    const { id } = req.params
+    const { name, text, date, comment } = req.body
+
+    const updateMessage = await pool.query('UPDATE message SET name = $1, text = $2, date = $3, comment = $4 WHERE id = $5', [name, text, date, comment, id])
+
+    if (!updateMessage.rows) {
+      res.status(404).send([])
+      return
+    }
+
+    res.status(200).json(updateMessage)
+
+  } catch (error) {
+    console.error(error)
+
+}
+
+}
 
 
 
 
-export { getMessage, getSingleMessage, postMessage, deleteMessage }
+
+
+export { getMessage, getSingleMessage, postMessage, deleteMessage, updateMessage }
 
 
