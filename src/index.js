@@ -11,12 +11,17 @@ dotenv.config();
 import messageRouter from "./router/messageRouter.js";
 import agreeRouter from "./router/agreeRouter.js";
 import disagreeRouter from "./router/disagreeRouter.js";
+import commentRouter from "./router/commentRouter.js";
 
 // tg
 
 
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true });
+
+const messageToTg = (item) => {
+  return `\n${item.id}\n\n КАРТОЧКА #${item.id}\n\n\nАвтор:${item.name}\n\nСообщение:${item.text}`
+}
 
 // methods
 
@@ -33,7 +38,7 @@ const startBot = () => {
         reply_markup: {
           resize_keyboard: true,
           keyboard: [
-          [{ text: 'Помощь', callback_data: 'help' }, { text: 'О Боте', callback_data: 'about' }],
+          [{ text: 'Помощь', callback_data: 'help' }, { text: 'О Боте', callback_data: 'about' }, { text: 'Карточки', callback_data: 'cards' }],
         ]}
       });
     }
@@ -51,14 +56,32 @@ const infoBot = () => {
       bot.sendMessage(chatId, "Сделайте то то и то то");
     } else if (message === 'О Боте') {
       bot.sendMessage(chatId, "Бот бот бот бот");
+    } else if (message === 'Карточки') {
+
+      freeCard.map((item) => {
+        bot.sendMessage(chatId, messageToTg(item), {
+          reply_markup: {
+            inline_keyboard: [
+              [{text: 'Согласовать', callback_data: 'agree'}],
+              [{text: 'Отклонить', callback_data: 'disagree'}],
+              [{text: 'Согласовать с замечанием', callback_data: 'comment'}]
+            ]
+          }
+
+      })})
+
+
     }
   });
 
 }
 
-
 const answerBotMessage = () => {
   bot.on("callback_query", (msg) => {
+
+    try {
+
+
     const chatId = msg.message.chat.id;
     const message = msg.data;
     const text = msg.message.text;
@@ -71,26 +94,91 @@ const answerBotMessage = () => {
 
       bot.sendMessage(chatId, "Согласен");
       getSingleAgree(id)
-      // deleteMessage(id);
-      // bot.deleteMessage(chatId, msg.message.message_id);
+      setTimeout(() => {
+        bot.deleteMessage(chatId, msg.message.message_id);
+      }, 2000);
 
-    } else {
+    } else if (message === 'disagree') {
 
       bot.sendMessage(chatId, "Не согласен");
       getSingleDisagree(id)
-      // deleteMessage(id);
-      // bot.deleteMessage(chatId, msg.message.message_id);
+
+      setTimeout(() => {
+        bot.deleteMessage(chatId, msg.message.message_id);
+      }, 2000);
+
+
+    } else if (message === 'comment') {
+
+      bot.editMessageText(text + `\n\n*Сообщение согласовано с замечанием, просьба связаться с О.Н*`, {
+        chat_id: chatId,
+        message_id: msg.message.message_id,
+        parse_mode: 'Markdown',
+      })
+
+      getUpdateMessage(id)
+      setTimeout(() => {
+        getSingleComment(id)
+      }, 2000)
+
 
     }
 
-  })
-}
+    } catch (error) {
+      console.error(error)
+    }
 
+  })
+
+}
 
 
 startBot()
 infoBot();
 answerBotMessage();
+
+//
+
+
+const freeCard = []
+
+
+const getAllCard = async () => {
+  try {
+
+    const responce = await fetch(`http://localhost:9000/api/v1/message`, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+      }
+
+    })
+
+
+    const data = await responce.json();
+    return data.filter(card => card.comment === null).map((item) => {
+      console.log(item);
+      return freeCard.push(item);
+    })
+
+
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+getAllCard()
+
+setTimeout(() => {
+  console.log(freeCard)
+}, 3000)
+
+
+
+
+
 
 
 
@@ -99,6 +187,9 @@ answerBotMessage();
 const getSingleAgree = async (id) => {
 
   try {
+
+
+    console.log(id);
 
     const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
       method: 'GET',
@@ -141,6 +232,73 @@ const getSingleDisagree = async (id) => {
 }
 
 
+const getUpdateMessage = async (id) => {
+  try {
+
+    const responceCard = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+      }
+    })
+
+    const singleMessage = await responceCard.json();
+    console.log(singleMessage[0]);
+
+    const { name, text, date, comment } = singleMessage[0];
+
+    const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json",
+
+      },
+
+      body: JSON.stringify({
+        id: id,
+        name: name,
+        text: text,
+        date: date,
+        comment: 'Сообщение согласовано!!!',
+
+      })
+    })
+
+    const data = await responce.json();
+    console.log(data);
+    return data
+
+  } catch (error) {
+    console.log(error);
+
+  }
+}
+
+
+const getSingleComment = async (id) => {
+  try {
+
+    const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+      }
+    })
+
+
+    const singleMessage = await responce.json();
+    console.log(singleMessage[0]);
+    return postCard(singleMessage[0], 'comment')
+
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+
+
 // post
 
 
@@ -176,7 +334,6 @@ const deleteMessage = async (id) => {
     })
 
     const data = await responce.json();
-    console.log(data);
     return data
 
   } catch (error) {
@@ -204,6 +361,7 @@ app.use(express.static("public"));
 app.use('/api/v1', messageRouter);
 app.use('/api/v1', agreeRouter);
 app.use('/api/v1', disagreeRouter);
+app.use('/api/v1', commentRouter)
 
 // listen
 

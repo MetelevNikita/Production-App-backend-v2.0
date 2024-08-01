@@ -12,7 +12,7 @@ const getDisagreeMessage = async (req, res) => {
       return
     }
 
-    res.status(200).json(allDisagreeMessage.rows)
+    res.status(200).send(allDisagreeMessage.rows)
 
   } catch (error) {
     console.error(error)
@@ -46,7 +46,7 @@ const getSingleDisagreeMessage = async (req, res) => {
 const postDisagreeMessage = async (req, res) => {
   try {
 
-    const { name, text, date } = req.body
+    const {name, text, date } = req.body
     const newDisagreeMessage = await pool.query('INSERT INTO disagree (name, text, date) VALUES ($1, $2, $3)', [name, text, date])
 
     if (newDisagreeMessage.rows.length < 1) {

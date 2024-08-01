@@ -2,7 +2,7 @@ import Router from "express";
 
 // module
 
-import { getMessage, getSingleMessage, postMessage, deleteMessage } from "../controllers/messageController.js";
+import { getMessage, getSingleMessage, postMessage, deleteMessage, updateMessage } from "../controllers/messageController.js";
 
 
 
@@ -12,6 +12,7 @@ messageRouter.get("/message", getMessage);
 messageRouter.get("/message/:id", getSingleMessage);
 messageRouter.post("/message", postMessage);
 messageRouter.delete("/message/:id", deleteMessage);
+messageRouter.put("/message/:id", updateMessage);
 
 
 
