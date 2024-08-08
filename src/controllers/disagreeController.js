@@ -46,8 +46,9 @@ const getSingleDisagreeMessage = async (req, res) => {
 const postDisagreeMessage = async (req, res) => {
   try {
 
-    const {name, text, date } = req.body
-    const newDisagreeMessage = await pool.query('INSERT INTO disagree (name, text, date) VALUES ($1, $2, $3)', [name, text, date])
+    const {title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = req.body
+
+    const newDisagreeMessage = await pool.query('INSERT INTO disagree (title, cardid, name, phone, tgId, typeProduct, otherProduct, promotion, typeWork, target, viewer, effect, description, voiceover, timing, place, technicalSpecification, deadline, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *', [title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment])
 
     if (newDisagreeMessage.rows.length < 1) {
       res.status(404).send([])

@@ -43,8 +43,9 @@ const getSingleMessage = async (req, res) => {
 const postMessage = async (req, res) => {
   try {
 
-    const {name, text, date } = req.body
-    const newMessage = await pool.query('INSERT INTO message (name, text, date) VALUES ($1, $2, $3) RETURNING *', [name, text, date])
+    const {title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = req.body
+
+    const newMessage = await pool.query('INSERT INTO message (title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *', [title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment])
 
     if (newMessage.rows.length < 1) {
       res.status(404).send([])
@@ -86,9 +87,9 @@ const updateMessage = async (req, res) => {
   try {
 
     const { id } = req.params
-    const { name, text, date, comment } = req.body
+    const { title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = req.body
 
-    const updateMessage = await pool.query('UPDATE message SET name = $1, text = $2, date = $3, comment = $4 WHERE id = $5', [name, text, date, comment, id])
+    const updateMessage = await pool.query('UPDATE message SET title = $1, cardid = $2, name = $3, phone = $4, tgid = $5, typeproduct = $6, otherproduct = $7, promotion = $8, typework = $9, target = $10, viewer = $11, effect = $12, description = $13, voiceover = $14, timing = $15, place = $16, technicalspecification = $17, deadline = $18, comment = $19 WHERE id = $20', [title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment, id])
 
     if (!updateMessage.rows) {
       res.status(404).send([])
