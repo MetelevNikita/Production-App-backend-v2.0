@@ -538,7 +538,7 @@ const PORT = process.env.PORT || 9000;
 const startServer = () => {
   try {
     app.listen(PORT, () => {
-      console.log(`Сервер запущен на порту ${PORT} и pid ${pid}`);
+      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать`);
     });
   } catch (error) {
     console.error(`Сервер не запустился код ошибки ${error}`);
