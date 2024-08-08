@@ -47,15 +47,16 @@ const getSingleAgreeMessage = async (req, res) => {
 const postAgreeMessage = async (req, res) => {
   try {
 
-    const {name, text, date } = req.body
-    const newAreeMessage = await pool.query('INSERT INTO agree (name, text, date) VALUES ($1, $2, $3)', [name, text, date])
+    const {title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = req.body
+
+    const newAreeMessage = await pool.query('INSERT INTO agree (title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *', [title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment])
 
     if (!newAreeMessage.rows) {
-      res.status(404).json({message: 'message cerate'})
+      res.status(404).json({message: 'message not cerate'})
       return
     }
 
-    res.status(200).send(newAreeMessage.rows)
+    res.status(200).json(newAreeMessage.rows)
 
   } catch (error) {
     console.error(error)

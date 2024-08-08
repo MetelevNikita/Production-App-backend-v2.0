@@ -43,10 +43,9 @@ const getSingleComment = async (req, res) => {
 const postComment = async (req, res) => {
   try {
 
-    const {name, text, date, comment } = req.body
-    console.log(req.body)
+    const {title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = req.body
 
-    const postComment = await pool.query('INSERT INTO comment (name, text, date, comment) VALUES ($1, $2, $3, $4) RETURNING *', [name, text, date, comment])
+    const postComment = await pool.query('INSERT INTO comment (title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *', [title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment])
 
     if(postComment.rows < 1) {
       res.status(404).send([])
