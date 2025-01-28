@@ -8,7 +8,9 @@ import fetch from "node-fetch";
 
 // log
 
-import { logger } from './logger.js';
+import logger from './logger.js';
+
+console.log(logger)
 
 //
 
