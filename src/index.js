@@ -4,6 +4,13 @@ import bodyParser from "body-parser";
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
 import { LocalStorage } from "node-localstorage";
+import fetch from "node-fetch";
+
+// log
+
+import { logger } from './logger.js';
+
+//
 
 const localStorage = new LocalStorage('./scratch');
 
@@ -127,7 +134,8 @@ const yougileСoordinationColumn = async (id, column) => {
     })
 
   } catch (error) {
-    console.log(`задача не обнаружена, произошла ошибка ${error.code}`);
+    logger.error(`Задача не обнаружена, произошла ошибка ${error.message}`)
+    console.log(`Задача не обнаружена, произошла ошибка ${error.message}`);
   }
 }
 
@@ -152,7 +160,6 @@ const messageToTg = (card) => {
 
 const startBot = () => {
   bot.on("message", (msg) => {
-    console.log(msg);
 
     const chatId = msg.chat.id;
     const message = msg.text;
@@ -178,9 +185,9 @@ const infoBot = () => {
     const message = msg.text;
 
     if(message === 'Помощь') {
-      bot.sendMessage(chatId, "Сделайте то то и то то");
+      bot.sendMessage(chatId, "Вместе с карточкой вам дайтеся возможность ответить 3 ответами:\n\n1)Согласовать\n\n2)Отклонить\n\n3)Согласовать с замечаниями\n\nВ зависимости от ответа данная заявка попадает в аналогичную колонку в YouGile компании Prodcution UTV для дальнейшей обработки");
     } else if (message === 'О Боте') {
-      bot.sendMessage(chatId, "Бот бот бот бот");
+      bot.sendMessage(chatId, "Бот для работы с входящими заявками на производство продукции Production UTV");
     } else if (message === 'Карточки') {
 
       freeCard.map((item) => {
@@ -247,7 +254,7 @@ const answerBotMessage = () => {
 
     } else if (message === 'disagree') {
 
-      bot.sendMessage(chatId, `Задача с №${id} согласована!`);
+      bot.sendMessage(chatId, `Задача с №${id} не согласована!`);
       getSingleDisagree(id)
       sendMessageTgUser(userTgId, textToUser)
       yougileСoordinationColumn(cardId, disagreeColumn)
@@ -273,7 +280,8 @@ const answerBotMessage = () => {
     }
 
     } catch (error) {
-      console.error(error)
+      logger.error(`При попытке перенести сообщение в телеграм боте произошла ошибка ${error.message}`)
+      console.error(`При попытке перенести сообщение в телеграм боте произошла ошибка ${error.message}`)
     }
 
   })
@@ -298,7 +306,8 @@ const sendMessageTgUser = async (chat_id, text) => {
     })
 
   } catch (error) {
-    console.error(`При отправке обратного сообщения пользователю произошла ошибка ${error}`)
+    logger.error(`При отправке обратного сообщения пользователю произошла ошибка ${error.message}`)
+    console.error(`При отправке обратного сообщения пользователю произошла ошибка ${error.message}`)
   }
 }
 
@@ -443,8 +452,8 @@ const getUpdateMessage = async (idCard) => {
     return data
 
   } catch (error) {
-    console.log(error);
-
+    logger.error(`При попытке согласовать карточку произошео сбой ${error.message}`)
+    console.log(error.message);
   }
 }
 
@@ -465,7 +474,7 @@ const getSingleComment = async (id) => {
 
 
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
   }
 }
 
@@ -543,9 +552,11 @@ const PORT = process.env.PORT || 9000;
 const startServer = () => {
   try {
     app.listen(PORT, () => {
-      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v2.1`);
+      logger.info('Сервер запущен на порту 9000 и pid ' + pid + ' Добро пожаловать v2.5')
+      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v2.5`);
     });
   } catch (error) {
+    logger.error(`Сервер не запустился код ошибки ${error}`)
     console.error(`Сервер не запустился код ошибки ${error}`);
   }
 };
