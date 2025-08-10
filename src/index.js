@@ -18,7 +18,7 @@ console.log(logger)
 const localStorage = new LocalStorage('./scratch');
 
 dotenv.config({
-  path: path.join(__dirname, "../.env")
+  path: path.join(process.cwd(), ".env")
 });
 
 // module
