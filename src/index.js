@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path"
 import bodyParser from "body-parser";
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
@@ -16,7 +17,9 @@ console.log(logger)
 
 const localStorage = new LocalStorage('./scratch');
 
-dotenv.config();
+dotenv.config({
+  path: path.join(__dirname, "../.env")
+});
 
 // module
 
