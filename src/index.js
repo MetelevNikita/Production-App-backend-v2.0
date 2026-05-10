@@ -150,10 +150,7 @@ const yougileСoordinationColumn = async (id, column) => {
 const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, {
-    polling: {
-      interval: 1000,
-      params: { timeout: 5 } // long polling timeout
-    },
+    polling: false,
     request: {
       agent: socksAgent,
       timeout: 10000,          // сетевой таймаут запроса
