@@ -151,10 +151,10 @@ const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, {
     polling: true,
-    request: {
-      agent: socksAgent,
-      timeout: 10000,          // сетевой таймаут запроса
-    }
+    // request: {
+    //   agent: socksAgent ?? undefined,
+    //   timeout: 10000,          // сетевой таймаут запроса
+    // }
 });
 
       bot.getMe()
