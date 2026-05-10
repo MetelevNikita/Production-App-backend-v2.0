@@ -150,7 +150,7 @@ const yougileСoordinationColumn = async (id, column) => {
 const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, {
-    polling: false,
+    polling: true,
     request: {
       agent: socksAgent,
       timeout: 10000,          // сетевой таймаут запроса
@@ -575,7 +575,7 @@ const PORT = process.env.PORT || 9000;
 const startServer = () => {
   try {
     const server = app.listen(PORT, () => {
-      logger.info('Сервер запущен на порту 9000 и pid ' + pid + ' Добро пожаловать v3.0')
+      logger.info('Сервер запущен на порту 9000 и pid ' + pid + ' Добро пожаловать v3.2')
       console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v3.0`);
     });
 
