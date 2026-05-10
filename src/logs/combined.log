@@ -12,3 +12,7 @@
 {"level":"info","message":"Сервер запущен на порту 9000 и pid 8719 Добро пожаловать v2.5","service":"LOG"}
 {"level":"info","message":"Сервер запущен на порту 9000 и pid 8767 Добро пожаловать v2.5","service":"LOG"}
 {"level":"info","message":"Сервер запущен на порту 9000 и pid 41856 Добро пожаловать v2.5","service":"LOG"}
+{"level":"info","message":"Сервер запущен на порту 9000 и pid 42600 Добро пожаловать v3.0","service":"LOG"}
+{"level":"info","message":"Сервер запущен на порту 9000 и pid 42734 Добро пожаловать v3.0","service":"LOG"}
+{"level":"info","message":"Сервер запущен на порту 9000 и pid 42865 Добро пожаловать v3.0","service":"LOG"}
+{"level":"info","message":"Сервер запущен на порту 9000 и pid 42939 Добро пожаловать v3.0","service":"LOG"}

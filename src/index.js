@@ -151,10 +151,7 @@ const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true, request: {
   agent: socksAgent,
-  agentOptions: {
-    keepAlive: true,
-    family: 4
-  }
+  timeout: 30000,
 }});
 
 const messageToTg = (card) => {
