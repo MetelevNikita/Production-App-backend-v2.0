@@ -151,10 +151,10 @@ const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, {
     polling: true,
-    // request: {
-    //   agent: socksAgent ?? undefined,
-    //   timeout: 10000,          // сетевой таймаут запроса
-    // }
+    request: {
+      agent: socksAgent ?? undefined,
+      timeout: 10000,          // сетевой таймаут запроса
+    }
 });
 
       bot.getMe()
@@ -576,7 +576,7 @@ const startServer = () => {
   try {
     const server = app.listen(PORT, () => {
       logger.info('Сервер запущен на порту 9000 и pid ' + pid + ' Добро пожаловать v3.2')
-      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v3.0`);
+      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v3.2`);
     });
 
 
