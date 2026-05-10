@@ -151,14 +151,17 @@ const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, {
     polling: {
-      interval: 300,
-      params: { timeout: 10 } // long polling timeout
+      interval: 1000,
+      params: { timeout: 5 } // long polling timeout
     },
     request: {
       agent: socksAgent,
-      timeout: 15000,          // сетевой таймаут запроса
-      forever: true            // keep-alive
+      timeout: 10000,          // сетевой таймаут запроса
     }
+});
+
+bot.on("polling_error", (e) => {
+  console.error("[polling_error]", e.code, e.message);
 });
 
 const messageToTg = (card) => {
