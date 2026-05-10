@@ -6,19 +6,18 @@ import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
 import { LocalStorage } from "node-localstorage";
 import fetch from "node-fetch";
+import { SocksProxyAgent } from "socks-proxy-agent";
 
 // log
 
 import logger from './logger.js';
-
-console.log(logger)
 
 //
 
 const localStorage = new LocalStorage('./scratch');
 
 dotenv.config({
-  path: path.join(process.cwd(), ".env")
+  path: path.join(process.cwd(), "./.env")
 });
 
 // module
@@ -148,9 +147,10 @@ const yougileСoordinationColumn = async (id, column) => {
 
 // tg
 
-
+const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
 const TOKEN = process.env.BOT_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true, request: {
+  agent: socksAgent,
   agentOptions: {
     keepAlive: true,
     family: 4
@@ -215,6 +215,8 @@ const infoBot = () => {
 
 const answerBotMessage = () => {
   bot.on("callback_query", (msg) => {
+
+    console.log(msg)
 
     try {
 
@@ -556,14 +558,23 @@ const PORT = process.env.PORT || 9000;
 
 const startServer = () => {
   try {
-    app.listen(PORT, () => {
-      logger.info('Сервер запущен на порту 9000 и pid ' + pid + ' Добро пожаловать v2.5')
-      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v2.5`);
+    const server = app.listen(PORT, () => {
+      logger.info('Сервер запущен на порту 9000 и pid ' + pid + ' Добро пожаловать v3.0')
+      console.log(`Сервер запущен на порту ${PORT} и pid ${pid} Добро пожаловать v3.0`);
     });
+
+
+    server.on('error', (err) => {
+      console.error(`ОШИБКА старта серевера ${err}`)
+      process.exit(1)
+    })
+
   } catch (error) {
     logger.error(`Сервер не запустился код ошибки ${error}`)
     console.error(`Сервер не запустился код ошибки ${error}`);
   }
 };
+
+
 
 startServer();
