@@ -153,7 +153,7 @@ const bot = new TelegramBot(TOKEN, {
     polling: true,
     request: {
       agent: socksAgent ?? undefined,
-      timeout: 10000,          // сетевой таймаут запроса
+      timeout: 3000,          // сетевой таймаут запроса
     }
 });
 
