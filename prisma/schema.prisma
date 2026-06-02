@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Message {
+  id                     Int     @id @default(autoincrement())
+  cardid                 String?
+  title                  String  @db.VarChar
+  name                   String  @db.VarChar
+  phone                  String  @db.VarChar
+  tgid                   String  @db.VarChar
+  typeproduct            String? @db.VarChar
+  otherproduct           String? @db.VarChar
+  promotion              String  @db.VarChar
+  typework               String  @db.VarChar
+  target                 String  @db.VarChar
+  viewer                 String  @db.VarChar
+  effect                 String? @db.VarChar
+  description            String  @db.VarChar
+  voiceover              String  @db.VarChar
+  timing                 String  @db.VarChar
+  place                  String? @db.VarChar
+  technicalspecification String? @db.VarChar
+  deadline               String  @db.VarChar
+  comment                String? @db.VarChar
+  status                 String?
+
+  @@map("message")
+}
