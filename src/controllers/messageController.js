@@ -170,10 +170,10 @@ const postMessage = async (req, res) => {
     // 
 
     const sendToTgAuthor = await sendMessageTelegram(tgid, 'author', messages.tg, '', '')
-    console.log(sendToTgAuthor)
+    console.log('SEND TO AUTHOR ', sendToTgAuthor)
 
     const sendToTgGroup = await sendMessageTelegram('-4171897222', 'admin', messages.tg, sendToYG.id, newMessage.id)
-    console.log(sendToTgGroup)
+    console.log('SEND TO ADMIN GROUP ', sendToTgGroup)
 
 
 
