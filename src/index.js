@@ -148,31 +148,18 @@ const startBot = () => {
         reply_markup: {
           resize_keyboard: true,
           keyboard: [
-          [{ text: 'Помощь', callback_data: 'help' }, { text: 'О Боте', callback_data: 'about' }, { text: 'Карточки', callback_data: 'cards' }],
+          [{ text: 'Помощь', callback_data: 'help' }, { text: 'О Боте', callback_data: 'about' }, { text: 'Ссылка на сайт', callback_data: 'site' }],
         ]}
       });
     }
 
 
     if(message === 'Помощь') {
-      bot.sendMessage(chatId, "Вместе с карточкой вам дайтеся возможность ответить 3 ответами:\n\n1)Согласовать\n\n2)Отклонить\n\n3)Согласовать с замечаниями\n\nВ зависимости от ответа данная заявка попадает в аналогичную колонку в YouGile компании Prodcution UTV для дальнейшей обработки");
+      bot.sendMessage(chatId, "Бот показывает статусы всех действий с карточкой Production UTV");
     } else if (message === 'О Боте') {
-      bot.sendMessage(chatId, "Бот для работы с входящими заявками на производство продукции Production UTV");
-    } else if (message === 'Карточки') {
-
-      freeCard.map((item) => {
-        bot.sendMessage(chatId, messageToTg(item), {
-          reply_markup: {
-            inline_keyboard: [
-              [{text: 'Согласовать', callback_data: 'agree'}],
-              [{text: 'Отклонить', callback_data: 'disagree'}],
-              [{text: 'Согласовать с замечанием', callback_data: 'comment'}]
-            ]
-          }
-
-      })})
-
-
+      bot.sendMessage(chatId, "Бот для приема и обработки обращений пользователей Production UTV");
+    } else if (message === 'Ссылка на сайт') {
+      bot.sendMessage(chatId, 'Ссылка на сайт <a>https://utv-production.ru/</a>', {parse_mode: 'HTML'})
     }
   });
 
@@ -343,11 +330,9 @@ app.use('/api/v1', messageRouter);
 
 // frontend static
 
-
-
-
-
 const frontendPath = path.resolve(process.cwd(), '../frontend/build/index.html')
+
+// 
 
 
 app.get('/', (req, res) => {
