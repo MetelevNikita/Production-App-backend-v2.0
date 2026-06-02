@@ -1,20 +1,30 @@
 import express from "express";
+import fs from 'fs'
 import cors from "cors";
 import path from "path"
 import bodyParser from "body-parser";
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
-import { LocalStorage } from "node-localstorage";
 import fetch from "node-fetch";
-import { SocksProxyAgent } from "socks-proxy-agent";
+
+// bot
+
+import { getTelegramBot } from "./lib/telegramBot.js";
+import { getYGSticker } from "./function/getYouGileSticker.js";
+
+//
+
+import { getMessageYouGile } from "./lib/getMessageYouGile.js";
+import { moveMessageYouGile } from "./lib/moveMessageYouGile.js";
 
 // log
 
 import logger from './logger.js';
 
-//
+// prisma
 
-const localStorage = new LocalStorage('./scratch');
+import { prisma } from './lib/prisma.js'
+
 
 dotenv.config({
   path: path.join(process.cwd(), "./.env")
@@ -23,9 +33,6 @@ dotenv.config({
 // module
 
 import messageRouter from "./router/messageRouter.js";
-import agreeRouter from "./router/agreeRouter.js";
-import disagreeRouter from "./router/disagreeRouter.js";
-import commentRouter from "./router/commentRouter.js";
 
 
 // yougile
@@ -46,6 +53,11 @@ const getYGApiKey = async () => {
 
     const dataCompany = await responceCompany.json();
 
+    if (!dataCompany) {
+      console.log(`Пользователь не авторизован в YouGile ${error.code}`);
+      return
+    }
+
 
     const responceApiKey = await fetch(`${url}auth/keys/get`, {
       method: 'POST',
@@ -58,17 +70,16 @@ const getYGApiKey = async () => {
 
 
     const dataApiKey = await responceApiKey.json();
-    localStorage.setItem('apiKey', dataApiKey[0].key)
+    process.env.YG_API_KEY = dataApiKey[0].key
+    return dataApiKey[0].key
 
 
   } catch (error) {
-    console.log(`Api ключ не обнаружен, произошла ошибка ${error.code}`);
+    console.error(`Api ключ не обнаружен, произошла ошибка ${error.code}`);
+    return
   }
 }
 
-
-
-const apiKey = localStorage.getItem('apiKey');
 
 
 
@@ -79,103 +90,49 @@ const getYGColums = async () => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${process.env.YG_API_KEY}`
       }
     })
 
     const data = await responce.json();
-    localStorage.setItem('columnAgree', data.content[1].id)
-    localStorage.setItem('columnDisagree', data.content[2].id)
-    localStorage.setItem('columnComment', data.content[8].id)
+    return data
 
   } catch (error) {
-    console.log(`Yougile колонки не обнаружены, произошла ошибка ${error.code}`);
+    console.error(`Yougile колонки не обнаружены, произошла ошибка ${error.code}`);
+    return
   }
 }
 
 
-const getYGtask = async () => {
-  try {
+await getYGApiKey()
+const columns = await getYGColums()
 
-    const responce = await fetch(`${url}tasks`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      }
-    })
-
-    const data = await responce.json();
-
-  } catch (error) {
-    console.log(`Yougile задач не обнаружены, произошла ошибка ${error.code}`);
-  }
-}
-
-
-getYGApiKey()
-getYGColums()
-
-
-const agreeColumn = localStorage.getItem('columnAgree');
-const disagreeColumn = localStorage.getItem('columnDisagree');
-const commentColumn = localStorage.getItem('columnComment');
+const agreeColumn = columns.content.find((item) => item.title == 'Согласовано').id ?? null
+const disagreeColumn = columns.content.find((item) => item.title == 'Отклонено').id ?? null
 
 
 
-const yougileСoordinationColumn = async (id, column) => {
 
-  try {
-
-    const responce = await fetch(`${url}tasks/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({deleted: false, columnId: column})
-
-    })
-
-  } catch (error) {
-    logger.error(`Задача не обнаружена, произошла ошибка ${error.message}`)
-    console.log(`Задача не обнаружена, произошла ошибка ${error.message}`);
-  }
-}
 
 
 
 // tg
+const bot = await getTelegramBot()
+bot.getMe()
+  .then((botInfo) => {
+    console.log(`Бот подключен: @${botInfo.username}`)
+  })
+  .catch((error) => {
+    console.error('Бот не подключился:', error)
+  })
 
-const socksAgent = new SocksProxyAgent(process.env.SOCKS_AGENT)
-const TOKEN = process.env.BOT_TOKEN;
-const bot = new TelegramBot(TOKEN, {
-    polling: true,
-    request: {
-      agent: socksAgent ?? undefined,
-      timeout: 60000,          // сетевой таймаут запроса
-    }
-});
+bot.on('polling_error', (error) => {
+  console.error('Polling error:', error.message)
+})
 
-      bot.getMe()
-        .then((botInfo) => {
-          console.log(`Бот подключен: @${botInfo.username}`)
-        })
-        .catch((error) => {
-          console.error('Бот не подключился:', error)
-        })
-
-      bot.on('polling_error', (error) => {
-        console.error('Polling error:', error.message)
-      })
-
-      bot.on('error', (error) => {
-        console.error('Bot error:', error)
-      })
-
-const messageToTg = (card) => {
-  return `№${card.id}\n\nНазвание проекта\n\n${card.title}\n\nИмя\n\n${card.name}\n\nТелефон\n\n${card.phone}\n\nTelegramID\n\n${card.tgid}\n\nТип продукта\n\n${card.typeproduct}\n\nДругое\n\n${card.otherproduct}\n\nСопутствующие продукты для фильма\n\n${card.promotion}\n\nТип Работ\n\n${card.typework}\n\nДля какой большой цели нужен продукт?\n\n${card.target}\n\nКто является конечным зрителем и география его проживания?\n\n${card.viewer}\n\nКакой эффект должен произвести продукт на зрителя?\n\n${card.effect}\n\nОпишите содержание ролика\n\n${card.description}\n\nЗакадровый текст\n\n${card.voiceover}\n\nХронометраж\n\n${card.timing}\n\nПлощадки для размещения\n\n${card.place}\n\nТехническая спецификация\n\n${card.technicalspecification}\n\n \n\nДата выхода\n\n${card.deadline}`
-}
+bot.on('error', (error) => {
+  console.error('Bot error:', error)
+})
 
 // methods
 
@@ -195,15 +152,7 @@ const startBot = () => {
         ]}
       });
     }
-  });
 
-}
-
-const infoBot = () => {
-  bot.on("message", (msg) => {
-
-    const chatId = msg.chat.id;
-    const message = msg.text;
 
     if(message === 'Помощь') {
       bot.sendMessage(chatId, "Вместе с карточкой вам дайтеся возможность ответить 3 ответами:\n\n1)Согласовать\n\n2)Отклонить\n\n3)Согласовать с замечаниями\n\nВ зависимости от ответа данная заявка попадает в аналогичную колонку в YouGile компании Prodcution UTV для дальнейшей обработки");
@@ -227,80 +176,128 @@ const infoBot = () => {
     }
   });
 
+
+
+
 }
 
-const answerBotMessage = () => {
-  bot.on("callback_query", (msg) => {
 
-    console.log(msg)
+const answerBotMessage = () => {
+  bot.on("callback_query", async (msg) => {
 
     try {
 
 
     const chatId = msg.message.chat.id;
-    const message = msg.data;
+    const callbackData = msg.data;
     const text = msg.message.text;
+    const messageId = msg.message.message_id
 
 
-    const userTgId = text.split("\n")[19]
-    const id = text.split("\n")[0].slice(1, 5);
-    const cardId = msg.message.text.split("\n")[3].slice(1, -1)
+    const parseData = callbackData.split(':')
+    const callbackText = parseData[0]
+    const callbackId = parseData[1]
+    const callbackCardId = parseData[2]
 
 
-    let textToUser = ''
+    if (callbackText === 'agreed') {
+
+      const getCard = await getMessageYouGile(callbackId)
+
+      if (!getCard || !getCard.success) {
+        throw new Error('Ошибка получения задачи Yougile')
+      }
+
+      const moveCard = await moveMessageYouGile(callbackId, agreeColumn)
+
+      console.log(`Задача ${getCard.data.title} перемещана во вкладку "Согласовано"`)
+
+      const userId = getCard.data.description.match(/<strong>TelegramID<\/strong><br\s*\/?>([^<]*)<br\s*\/?>/)[1];
+
+      // message
+
+      const message = `*Задача ${getCard.data.title}\n\nСтатус - <b>Cогласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}`
+
+      // send to Group
+
+      await bot.editMessageText(
+        message,
+        {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: "HTML",
+        }
+      );
+
+      // send User
 
 
-    if(message === 'agree') {
-      textToUser = `*Ваше сообщение за номером ${id} помечено как согласованное, за дополнительной информацией обратитесь к менеджеру проекта*`
-    } else if (message === 'disagree') {
-      textToUser === `*Ваше сообщение за номером ${id} помечено как отклоненное, за дополнительной информацией обратитесь к менеджеру проекта*`
-    } else if (message === 'comment') {
-      textToUser = `*Ваше сообщение за номером ${id} помечено как согласованное с замечанием, за дополнительной информацией обратитесь к менеджеру проекта*`
-    }
+      await bot.sendMessage(userId, message, {parse_mode: 'HTML'});
 
-
-
-
-
-    if (message === 'agree') {
-
-      bot.sendMessage(chatId, `Задача с №${id} согласована!`);
-      getUpdateMessage(id)
-      yougileСoordinationColumn(cardId, agreeColumn)
-
-      sendMessageTgUser(userTgId, textToUser)
-
-      setTimeout(() => {
-        bot.deleteMessage(chatId, msg.message.message_id);
-        getSingleAgree(id)
-      }, 2000);
-
-    } else if (message === 'disagree') {
-
-      bot.sendMessage(chatId, `Задача с №${id} не согласована!`);
-      getSingleDisagree(id)
-      sendMessageTgUser(userTgId, textToUser)
-      yougileСoordinationColumn(cardId, disagreeColumn)
-      setTimeout(() => {
-        bot.deleteMessage(chatId, msg.message.message_id);
-      }, 2000);
-
-
-    } else if (message === 'comment') {
-
-      bot.editMessageText(text + `\n\n*Сообщение согласовано с замечанием, просьба связаться с О.Н*`, {
-        chat_id: chatId,
-        message_id: msg.message.message_id,
-        parse_mode: 'Markdown',
+      await prisma.message.update({
+        where: {
+          id: parseInt(callbackCardId)
+        },
+        data: {
+          status: callbackText
+        }
       })
-      sendMessageTgUser(userTgId, textToUser)
 
-      getUpdateMessage(id)
-      yougileСoordinationColumn(cardId, commentColumn)
-      setTimeout(() => {
-        getSingleComment(id)
-      }, 2000)
+
+    } else if (callbackText === 'disagreed') {
+
+      const getCard = await getMessageYouGile(callbackId)
+
+      if (!getCard || !getCard.success) {
+        throw new Error('Ошибка получения задачи Yougile')
+      }
+
+      const moveCard = await moveMessageYouGile(callbackId, disagreeColumn)
+
+      console.log(`Задача ${getCard.data.title} перемещана во вкладку "Не согласовано"`)
+
+      const userId = getCard.data.description.match(/<strong>TelegramID<\/strong><br\s*\/?>([^<]*)<br\s*\/?>/)[1];
+
+      // message
+
+      const message = `*Задача ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}`
+
+      // send to Group
+
+      await bot.editMessageText(
+        message,
+        {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: "HTML",
+        }
+      );
+
+      // send User
+
+
+      await bot.sendMessage(userId, message, {parse_mode: 'HTML'});
+
+      // 
+
+      await prisma.message.update({
+        where: {
+          id: parseInt(callbackCardId)
+        },
+        data: {
+          status: callbackText
+        }
+      })
+
     }
+
+
 
     } catch (error) {
       logger.error(`При попытке перенести сообщение в телеграм боте произошла ошибка ${error.message}`)
@@ -313,242 +310,17 @@ const answerBotMessage = () => {
 
 
 
-const sendMessageTgUser = async (chat_id, text) => {
-  try {
-
-    const ANSWER_BOT_TOKEN = process.env.ANSWER_BOT_TOKEN
-    const url = `https://api.telegram.org/bot${ANSWER_BOT_TOKEN}/sendMessage`
-
-
-    const responce = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({chat_id: chat_id, parse_mode: 'html', text: text})
-    })
-
-  } catch (error) {
-    logger.error(`При отправке обратного сообщения пользователю произошла ошибка ${error.message}`)
-    console.error(`При отправке обратного сообщения пользователю произошла ошибка ${error.message}`)
-  }
-}
-
 
 startBot()
-infoBot();
 answerBotMessage();
 
 //
 
+const backendStatic = path.resolve(process.cwd(), 'public')
+const frontendStatic = path.resolve(process.cwd(), '../frontend/build')
 
-const freeCard = []
 
-
-const getAllCard = async () => {
-  try {
-
-    const responce = await fetch(`http://localhost:9000/api/v1/message`, {
-      method: 'GET',
-      headers: {
-        "Content-Type": "application/json",
-      }
-
-    })
-
-
-    const data = await responce.json();
-    return data.filter(card => card.comment === null).map((item) => {
-      return freeCard.push(item);
-    })
-
-
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-getAllCard()
-
-
-
-
-
-//
-
-const getSingleAgree = async (id) => {
-
-  try {
-
-
-    console.log(id);
-
-    const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
-      method: 'GET',
-      headers: {
-        "Content-Type": "application/json",
-      }
-    })
-
-    const singleMessage = await responce.json();
-    return postCard(singleMessage[0], 'agree')
-
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-
-const getSingleDisagree = async (id) => {
-
-  try {
-
-    const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
-      method: 'GET',
-      headers: {
-        "Content-Type": "application/json",
-      }
-    })
-
-    const singleMessage = await responce.json();
-    console.log(singleMessage[0])
-    return postCard(singleMessage[0], 'disagree')
-
-
-  } catch (error) {
-    console.log(error);
-  }
-
-}
-
-
-const getUpdateMessage = async (idCard) => {
-  try {
-
-    const responceCard = await fetch(`http://localhost:9000/api/v1/message/${idCard}`, {
-      method: 'GET',
-      headers: {
-        "Content-Type": "application/json",
-      }
-    })
-
-    const singleMessage = await responceCard.json();
-    console.log(singleMessage[0]);
-
-    const {id, title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = singleMessage[0];
-
-    const responce = await fetch(`http://localhost:9000/api/v1/message/${idCard}`, {
-      method: 'PUT',
-      headers: {
-        "Content-Type": "application/json",
-
-      },
-
-      body: JSON.stringify({
-          id: id,
-          cardid: cardid,
-          title: title,
-          name: name,
-          phone: phone,
-          tgid: tgid,
-          typeproduct: typeproduct,
-          otherproduct: otherproduct,
-          promotion: promotion,
-          typework: typework,
-          target: target,
-          viewer: viewer,
-          effect: effect,
-          description: description,
-          voiceover: voiceover,
-          timing: timing,
-          place: place,
-          technicalspecification: technicalspecification,
-          deadline: deadline,
-          comment: "Сообщение согласовано"
-
-      })
-    })
-
-    const data = await responce.json();
-    return data
-
-  } catch (error) {
-    logger.error(`При попытке согласовать карточку произошео сбой ${error.message}`)
-    console.log(error.message);
-  }
-}
-
-
-const getSingleComment = async (id) => {
-  try {
-
-    const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
-      method: 'GET',
-      headers: {
-        "Content-Type": "application/json",
-      }
-    })
-
-
-    const singleMessage = await responce.json();
-    return postCard(singleMessage[0], 'comment')
-
-
-  } catch (error) {
-    console.log(error.message);
-  }
-}
-
-
-
-
-// post
-
-
-const postCard = async (card, link) => {
-  try {
-    const responce = await fetch(`http://localhost:9000/api/v1/${link}`, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(card)
-    })
-
-    const data = await responce.json();
-    return data
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-
-// delete
-
-
-const deleteMessage = async (id) => {
-  try {
-    const responce = await fetch(`http://localhost:9000/api/v1/message/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      }
-    })
-
-    const data = await responce.json();
-    return data
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-
-
-
+// 
 
 
 const app = express();
@@ -559,14 +331,38 @@ const pid = process.pid;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
+
+// static paths
+
+app.use(express.static(backendStatic));
+app.use(express.static(frontendStatic))
 
 // router
 
 app.use('/api/v1', messageRouter);
-app.use('/api/v1', agreeRouter);
-app.use('/api/v1', disagreeRouter);
-app.use('/api/v1', commentRouter)
+
+// frontend static
+
+
+
+
+
+const frontendPath = path.resolve(process.cwd(), '../frontend/build/index.html')
+
+
+app.get('/', (req, res) => {
+
+  if (!frontendPath) {
+    res.status(404).json({
+      message: 'Нет папки с фронтендом (сделайте сборку)'
+    })
+  }
+
+  res.status(200).send(frontendPath)
+
+
+})
+
 
 // listen
 

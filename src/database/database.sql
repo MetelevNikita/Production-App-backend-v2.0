@@ -1,6 +1,5 @@
 create TABLE message(
   id SERIAL PRIMARY KEY NOT NULL,
-  cardid VARCHAR NOT NULL,
   title VARCHAR NOT NULL,
   name VARCHAR NOT NULL,
   phone VARCHAR NOT NULL,
