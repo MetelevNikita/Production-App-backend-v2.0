@@ -38,6 +38,16 @@ export async function getTelegramBot () {
     }
 
 
+    globalThis.telegramBot.on("polling_error", (error) => {
+        console.error("Polling error:", {
+            message: error.message,
+            code: (error).code,
+            cause: (error).cause,
+            stack: error.stack,
+        });
+    });
+
+
     return globalThis.telegramBot
 
 
