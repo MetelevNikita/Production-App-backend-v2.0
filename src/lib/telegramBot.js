@@ -18,7 +18,9 @@ export async function getTelegramBot () {
     const TOKEN = process.env.BOT_TOKEN ?? null
     const SOCKS5h = process.env.SOCKS_AGENT ?? null
 
-    const agent = new SocksProxyAgent(SOCKS5h) ?? null
+    const agent = new SocksProxyAgent(SOCKS5h, {
+        keepAlive: false
+    }) ?? null
 
     if (!TOKEN || !SOCKS5h) {
         throw new Error('Нет необходимых параметров')
@@ -29,13 +31,8 @@ export async function getTelegramBot () {
         console.log('Нет клобального объекта телеграм бота')
         globalThis.telegramBot = new TelegramBot(TOKEN, {
             polling: true,
-            ...(SOCKS5h
-                ? {
-                    request: {
-                    agent: new SocksProxyAgent(SOCKS5h),
-                    },
-                }
-                : {}),
+            agent: agent,
+            timeout: 6000
             });
 
     }
