@@ -20,7 +20,7 @@ export async function getTelegramBot () {
 
     const agent = new SocksProxyAgent(SOCKS5h, {
         keepAlive: false,
-        timeout: 10000
+        timeout: 30000
     }) ?? null
 
     if (!TOKEN || !SOCKS5h) {
@@ -34,7 +34,7 @@ export async function getTelegramBot () {
             polling: true,
             request: {
                 agent: agent,
-                timeout: 10000
+                timeout: 30000
             }
         });
 

@@ -203,7 +203,7 @@ const answerBotMessage = () => {
 
       // message
 
-      const message = `*Задача ${getCard.data.title}\n\nСтатус - <b>Cогласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+      const message = `*Задача №${callbackCardId} - ${getCard.data.title}\n\nСтатус - <b>Cогласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
         hour: "2-digit",
         minute: "2-digit"
       })}`
