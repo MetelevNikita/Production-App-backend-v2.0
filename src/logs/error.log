@@ -5,3 +5,4 @@
 {"level":"error","message":"При попытке перенести сообщение в телеграм боте произошла ошибка message is not defined","service":"LOG"}
 {"level":"error","message":"При попытке перенести сообщение в телеграм боте произошла ошибка message is not defined","service":"LOG"}
 {"level":"error","message":"При попытке перенести сообщение в телеграм боте произошла ошибка Cannot access 'getCard' before initialization","service":"LOG"}
+{"level":"error","message":"При попытке перенести сообщение в телеграм боте произошла ошибка data is not defined","service":"LOG"}
