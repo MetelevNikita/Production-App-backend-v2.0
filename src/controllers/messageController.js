@@ -122,32 +122,49 @@ const getSingleMessage = async (req, res) => {
 
 const postMessage = async (req, res) => {
   try {
+    
 
     const {title, cardid, name, phone, tgid, typeproduct, otherproduct, promotion, typework, target, viewer, effect, description, voiceover, timing, place, technicalspecification, deadline, comment } = req.body
-    const data = req.body
+
+
+    //  
+
+
+    try {
+
+      const sendRepeatMessage = await sendMessageTelegram(tgid, 'author', 'Проверяем подписаны ли вы на бота', '', '')
+      console.log('REPEAT MESSAGE ', sendRepeatMessage)
+      
+    } catch (error) {
+        console.log(`ERROR!!!!! ${error.message}`)
+        return res.status(200).json({
+          success: false,
+          message: 'Вы не подписались на бота',
+          data: null
+        })
+    }
+
+
 
     // 
 
-  
-
-    // 
 
     const columns = await getYGColums()
     const inboxColumn = columns.content.find(item => item.title == 'Входящие') ?? null
 
     if (!inboxColumn || !columns) {
-      res.status(200).json({
+      return res.status(200).json({
             success: false,
             message: 'Не удалось получить данные с YouGile',
             data: null
       })
     }
 
-
+    // DB CREATE
 
     const newMessage = await prisma.message.create({
       data: {
-          ...data,
+          ...req.body,
           status: 'inbox'
         }
     })
@@ -164,10 +181,25 @@ const postMessage = async (req, res) => {
 
     const messages = SampleMessage(newMessage)
 
+
+    // YG
+
     const sendToYG = await sendMessageYougile(title, inboxColumn.id, messages.yg, deadline, name)
     console.log(sendToYG)
 
-    // 
+    // DB UPDATE
+
+    const updateMessage = await prisma.message.update({
+      where: {
+        id: parseInt(newMessage.id)
+      },
+      data: {
+          cardid: sendToYG.id ?? null
+        }
+    })
+    
+
+    // TG
 
     const sendToTgAuthor = await sendMessageTelegram(tgid, 'author', messages.tg, '', '')
     console.log('SEND TO AUTHOR ', sendToTgAuthor)
@@ -177,7 +209,7 @@ const postMessage = async (req, res) => {
 
 
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Сообщение создано',
       data: newMessage
@@ -185,8 +217,12 @@ const postMessage = async (req, res) => {
 
 
   } catch (error) {
-    console.error(error)
-    res.status(500).json({message: `ERROR ${error.message}`})
+    console.error(error.message)
+    res.status(500).json({
+      success: false,
+      message: `Сетвая ошибка попробуйте позже`,
+      data: null
+    })
     return
 
 

@@ -16,6 +16,7 @@ import { getYGSticker } from "./function/getYouGileSticker.js";
 
 import { getMessageYouGile } from "./lib/getMessageYouGile.js";
 import { moveMessageYouGile } from "./lib/moveMessageYouGile.js";
+import { putMessageYouGile } from "./lib/putMessageYouGile.js";
 
 // log
 
@@ -24,6 +25,10 @@ import logger from './logger.js';
 // prisma
 
 import { prisma } from './lib/prisma.js'
+
+// 
+
+import { SampleMessage } from "./data/messages.js";
 
 
 dotenv.config({
@@ -52,6 +57,8 @@ const getYGApiKey = async () => {
     })
 
     const dataCompany = await responceCompany.json();
+
+    console.log(dataCompany)
 
     if (!dataCompany) {
       console.log(`Пользователь не авторизован в YouGile ${error.code}`);
@@ -111,11 +118,6 @@ const agreeColumn = columns.content.find((item) => item.title == 'Согласо
 const disagreeColumn = columns.content.find((item) => item.title == 'Отклонено').id ?? null
 
 
-
-
-
-
-
 // tg
 const bot = await getTelegramBot()
 bot.getMe()
@@ -137,7 +139,59 @@ bot.on('error', (error) => {
 // methods
 
 const startBot = () => {
-  bot.on("message", (msg) => {
+  bot.on("message", async (msg) => {
+
+
+    if (msg.reply_to_message) {
+
+      console.log(msg)
+
+      console.log('Создаем комментарий')
+      const id = msg.reply_to_message.text.match(/№(\d+)/)[1];
+      const textComment = msg.text
+      const groupId = msg.chat.id
+
+
+      const task = await prisma.message.findFirst({
+        where: {
+          id: parseInt(id)
+        }
+      })
+
+      if (!task) {
+        console.error('Задача с таким Id не найдена')
+        return
+      }
+
+      try {
+
+        const message = SampleMessage(task)
+
+        await prisma.message.update({
+          where: {
+            id: parseInt(id)
+          },
+          data: {
+            comment: `Комментарий к задаче от Эделевой О.Н: - ${textComment}`
+          }
+        })
+
+        await putMessageYouGile(task.cardid, textComment, task.title, message.yg)
+        
+      } catch (error) {
+        console.error(`Ошибка обновления задачи ${error.message}`)
+        return
+      }
+
+
+
+
+      bot.sendMessage(groupId, `🔔 Комментарий отправлен автору задачи\n\nТекст комментария - ${textComment}`, {parse_mode: 'html'})
+      bot.sendMessage(task.tgid, `⚠️ Задача №${task.id} # ${task.title} - отмечена комментарием от О.Н Эделевой\n\nКомментарий: ${textComment}`, {parse_mode: 'html'})
+
+      return
+
+    }
 
     const chatId = msg.chat.id;
     const message = msg.text;
@@ -153,7 +207,6 @@ const startBot = () => {
       });
     }
 
-
     if(message === 'Помощь') {
       bot.sendMessage(chatId, "Бот показывает статусы всех действий с карточкой Production UTV");
     } else if (message === 'О Боте') {
@@ -167,7 +220,6 @@ const startBot = () => {
 
 
 }
-
 
 const answerBotMessage = () => {
   bot.on("callback_query", async (msg) => {
@@ -203,7 +255,13 @@ const answerBotMessage = () => {
 
       // message
 
-      const message = `*Задача №${callbackCardId} - ${getCard.data.title}\n\nСтатус - <b>Cогласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+
+      const messageGroup = `*Задача №${callbackCardId} - ${getCard.data.title}\n\nСтатус - <b>Cогласовано</b>\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}`
+
+      const messageAuthor = `*Задача №${callbackCardId} - ${getCard.data.title}\n\nСтатус - <b>Cогласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
         hour: "2-digit",
         minute: "2-digit"
       })}`
@@ -211,7 +269,7 @@ const answerBotMessage = () => {
       // send to Group
 
       await bot.editMessageText(
-        message,
+        messageGroup,
         {
           chat_id: chatId,
           message_id: messageId,
@@ -222,7 +280,7 @@ const answerBotMessage = () => {
       // send User
 
 
-      await bot.sendMessage(userId, message, {parse_mode: 'HTML'});
+      await bot.sendMessage(userId, messageAuthor, {parse_mode: 'HTML'});
 
       await prisma.message.update({
         where: {
@@ -250,7 +308,12 @@ const answerBotMessage = () => {
 
       // message
 
-      const message = `*Задача ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+      const messageGroup = `*Задача ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}`
+
+      const messageAuthor = `*Задача ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
         hour: "2-digit",
         minute: "2-digit"
       })}`
@@ -258,7 +321,7 @@ const answerBotMessage = () => {
       // send to Group
 
       await bot.editMessageText(
-        message,
+        messageGroup,
         {
           chat_id: chatId,
           message_id: messageId,
@@ -269,7 +332,7 @@ const answerBotMessage = () => {
       // send User
 
 
-      await bot.sendMessage(userId, message, {parse_mode: 'HTML'});
+      await bot.sendMessage(userId, messageAuthor, {parse_mode: 'HTML'});
 
       // 
 
@@ -294,8 +357,6 @@ const answerBotMessage = () => {
   })
 
 }
-
-
 
 
 startBot()
