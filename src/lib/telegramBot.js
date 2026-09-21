@@ -23,7 +23,7 @@ export async function getTelegramBot () {
         timeout: 30000
     }) : undefined
 
-    if (!TOKEN || !SOCKS5h) {
+    if (!TOKEN) {
         throw new Error('Нет необходимых параметров')
     }
 
