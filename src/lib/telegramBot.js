@@ -23,6 +23,9 @@ export async function getTelegramBot () {
         timeout: 30000
     }) : undefined
 
+
+    console.log(agent)
+
     if (!TOKEN) {
         throw new Error('Нет необходимых параметров')
     }

@@ -351,7 +351,12 @@ const answerBotMessage = () => {
 
     } catch (error) {
       logger.error(`При попытке перенести сообщение в телеграм боте произошла ошибка ${error.message}`)
-      console.error(`При попытке перенести сообщение в телеграм боте произошла ошибка ${error.message}`)
+      console.error('Ошибка обработки кнопки:', error)
+
+      await bot.answerCallbackQuery(msg.id, {
+        text: 'Не удалось выполнить действие',
+        show_alert: true
+      }).catch(console.error)
     }
 
   })
