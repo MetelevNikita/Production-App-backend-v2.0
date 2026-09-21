@@ -18,10 +18,10 @@ export async function getTelegramBot () {
     const TOKEN = process.env.BOT_TOKEN ?? null
     const SOCKS5h = process.env.SOCKS_AGENT ?? null
 
-    const agent = new SocksProxyAgent(SOCKS5h, {
+    const agent = SOCKS5h ? new SocksProxyAgent(SOCKS5h, {
         keepAlive: false,
         timeout: 30000
-    }) ?? null
+    }) : undefined
 
     if (!TOKEN || !SOCKS5h) {
         throw new Error('Нет необходимых параметров')
