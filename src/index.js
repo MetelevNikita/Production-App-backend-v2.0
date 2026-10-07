@@ -42,6 +42,9 @@ import messageRouter from "./router/messageRouter.js";
 
 // yougile
 
+
+console.log('WORK IN PROGRESS')
+
 const url = process.env.YG_URL;
 
 
@@ -86,8 +89,6 @@ const getYGApiKey = async () => {
     return
   }
 }
-
-
 
 
 const getYGColums = async () => {
