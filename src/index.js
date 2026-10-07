@@ -146,8 +146,10 @@ const startBot = () => {
 
       console.log(msg)
 
+      const id = msg.reply_to_message.text?.match(/№(\d+)/)?.[1];
+      if (!id || typeof msg.text !== 'string') return;
+
       console.log('Создаем комментарий')
-      const id = msg.reply_to_message.text.match(/№(\d+)/)[1];
       const textComment = msg.text
       const groupId = msg.chat.id
 
@@ -308,12 +310,12 @@ const answerBotMessage = () => {
 
       // message
 
-      const messageGroup = `*Задача ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+      const messageGroup = `*Задача №${callbackCardId} - ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
         hour: "2-digit",
         minute: "2-digit"
       })}`
 
-      const messageAuthor = `*Задача ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
+      const messageAuthor = `*Задача №${callbackCardId} - ${getCard.data.title}\n\nСтатус - <b>Не согласовано</b>\nЗа дополнительной информацией обратитесь к менеджеру проекта\n\nДата изменения <b>${new Date().toLocaleDateString('ru-RU')}</b> - ${new Date().toLocaleTimeString("ru-RU", {
         hour: "2-digit",
         minute: "2-digit"
       })}`

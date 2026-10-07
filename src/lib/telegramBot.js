@@ -24,8 +24,6 @@ export async function getTelegramBot () {
     }) : undefined
 
 
-    console.log(agent)
-
     if (!TOKEN) {
         throw new Error('Нет необходимых параметров')
     }
